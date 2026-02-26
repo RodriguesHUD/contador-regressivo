@@ -1,73 +1,55 @@
 # React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Projeto em React + TypeScript + Tailwind, que na primeira execução exibe uma tela para o usuário escolher uma data/hora futura e, após a confirmação, renderiza um contador regressivo de dias/horas/minutos/segundos, atualizado em tempo real. A data escolhida é persistida no navegador para manter o estado entre recarregamentos.
 
-Currently, two official plugins are available:
+Destaques de implementação (decisões e motivos)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Validação de data (mínimo 1 minuto no futuro)
 
-## React Compiler
+No input: min={agora + 1 minuto} → evita selecionar “agora” e datas anteriores via UI.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+No submit: validação final garante a regra mesmo se o usuário digitar manualmente (ex.: if (d.getTime() < Date.now() + 60 * 1000) ...).
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+A maior parte dessas decisões foi tomada devido a erros e alertas do ESLint e eu fui reagindo aos seus avisos:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Storage wrapper (shared/storage.ts)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Decisão: encapsular localStorage em funções (get/set/clear) para evitar try/catch espalhado e facilitar trocar o armazenamento depois.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Por quê: resolve dois problemas comuns ao lidar com APIs do navegador: verbosidade do tratamento de erros e acoplamento tecnológico.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Cálculo de tempo com função pura (utils/time.ts)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Decisão: usar funções puras para converter diferença em ms → {days, hours, minutes, seconds}.
+
+Por quê: é mais confiável, fácil de testar e reduz bugs em cálculo de tempo.
+
+Timer sem drift (hook useCountdown)
+
+Decisão importante: evitar drift do setInterval.
+
+Como: usar setTimeout alinhado ao próximo “segundo cheio” (1000 - (now % 1000)) e parar em 0 para evitar renders desnecessários.
+
+Extra: setState acontece apenas dentro do callback do setTimeout, evitando atualizações síncronas no corpo do effect.
+
+Componente de UI reutilizável (TimeUnitCard.tsx)
+
+Decisão: componente pequeno e reutilizável para cada unidade de tempo.
+
+Por quê: mantém o layout limpo e facilita ajustes visuais/consistência.
+
+Modal React (sem <dialog> e sem effects)
+
+Decisão: modal 100% React (overlay) para evitar problemas de comportamento (ex.: StrictMode) e manter previsibilidade.
+
+Garantias:
+
+✅ Sem setState dentro de effect
+
+✅ Sem Date.now() no render (apenas no initializer do useState)
+
+✅ Fecha no ESC e ao clicar fora
+
+✅ Monta somente quando open no pai
