@@ -40,7 +40,7 @@ Decisão: componente pequeno e reutilizável para cada unidade de tempo.
 
 Por quê: mantém o layout limpo e facilita ajustes visuais/consistência.
 
-Modal React (sem <dialog> e sem effects)
+Modal React (sem dialog e sem effects)
 
 Decisão: modal 100% React (overlay) para evitar problemas de comportamento (ex.: StrictMode) e manter previsibilidade.
 
