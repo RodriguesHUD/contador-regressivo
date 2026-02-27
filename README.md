@@ -8,7 +8,7 @@ Validação de data (mínimo 1 minuto no futuro)
 
 No input: min={agora + 1 minuto} → evita selecionar “agora” e datas anteriores via UI.
 
-No submit: validação final garante a regra mesmo se o usuário digitar manualmente (ex.: if (d.getTime() < Date.now() + 60 * 1000) ...).
+No submit: validação final garante a regra mesmo se o usuário digitar manualmente (ex.: No submit: if (d.getTime() < Date.now() + 60 * 1000)...).
 
 
 A maior parte dessas decisões foi tomada devido a erros e alertas do ESLint e eu fui reagindo aos seus avisos:
